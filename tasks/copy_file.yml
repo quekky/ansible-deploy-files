@@ -1,0 +1,33 @@
+---
+#- debug: msg="copy_file.yml src_file={{src_file}} dest_file={{dest_file}} backup_dir_full={{backup_dir_full}} backup_dir_partial={{backup_dir_partial}} remote_src={{remote_src}}"
+
+- set_fact:
+    test: "{{dest_file}}"
+- name: "Get stat for src_file: {{src_file}}"
+  stat: path={{src_file}} get_checksum=false
+  register: src_file_stat1
+  when: remote_src
+- local_action: stat path={{src_file}} get_checksum=false
+  register: src_file_stat2
+  when: not remote_src
+- set_fact:
+    src_file_stat3: "{{ src_file_stat1 if remote_src else src_file_stat2 }}"
+- name: "Get stat for dest_file: {{dest_file}}"
+  stat: path={{dest_file}} get_checksum=false
+  register: dest_file_stat
+
+  
+- block:
+  - name: Backup if required
+    assert: that=true
+  - block:
+    - file: path={{backup_dir_full}}{{backup_dir_partial}} recurse=yes state=directory
+    - copy: src={{dest_file}} dest={{backup_dir_full}}{{backup_dir_partial}} remote_src=true force=yes
+    when: backup_dir_full is defined and dest_file_stat.stat.exists
+    ignore_errors: true
+  - name: Try to copy if changes
+    assert: that=true
+  - file: path={{dest_file|dirname}} recurse=yes state=directory
+  - copy: src={{src_file}} dest={{dest_file}} remote_src={{remote_src}} force=yes
+  - shell: echo {{src_file}} >> {{temp_file.stdout}}
+  when: src_file_stat3.stat.exists and (not dest_file_stat.stat.exists or src_file_stat3.stat.md5 != dest_file_stat.stat.md5)

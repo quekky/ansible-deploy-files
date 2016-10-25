@@ -1,0 +1,52 @@
+---
+# Deploy dir or a file to the server, if the file is changed
+# Optionally backup the existing files in backup_dir
+
+#- debug: msg="{{src}} {{dest}} {{remote_src}} {{backup_dir}}"
+
+- name: Check variables passed in
+  assert:
+    that:
+      - src is defined
+      - dest is defined
+      - remote_src == true or remote_src == false
+
+- name: Set_fact backup_dir
+  set_fact:
+    backup_dir_full: "{{backup_dir|regex_replace('/$','')}}/{{backup_dir_name}}/"
+  when: backup_dir is defined
+
+- stat: path={{src}} get_checksum=false get_md5=false
+  register: src_file_stat1
+  when: remote_src
+- local_action: stat path={{src}} get_checksum=false get_md5=false
+  register: src_file_stat2
+  when: not remote_src
+- set_fact:
+    src_file_stat: "{{ src_file_stat1 if remote_src else src_file_stat2 }}"
+
+- name: Check if src file exist
+  assert:
+    that: src_file_stat.stat.exists
+
+- name: Create temp file
+  shell: mktemp
+  register: temp_file
+
+- include: copy_file_to_dir.yml src_file={{src}} dest_file={{dest}} backup_dir_partial=
+  when: not src_file_stat.stat.isdir
+
+- include: copy_dir.yml src_file={{src}} dest_file={{dest}} backup_dir_partial=
+  when: src_file_stat.stat.isdir
+  
+#print result
+- name: Remove temp file
+  command: cat {{temp_file.stdout}}
+  register: files_uploaded
+- file: path=temp_file.stdout state=absent
+- name: "Files uploaded:"
+  debug: var=files_uploaded.stdout.split('\n')
+- name: "Backups are at:"
+  debug: var=backup_dir_name
+  when: backup_dir is defined
+

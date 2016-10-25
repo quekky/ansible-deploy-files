@@ -1,0 +1,23 @@
+---
+#- debug: msg="copy_dir.yml src_file={{src_file}} dest_file={{dest_file}} backup_dir_full={{backup_dir_full}} backup_dir_partial={{backup_dir_partial}} remote_src={{remote_src}}"
+
+- name: Find files to copy
+  find: paths="{{src_file}}" recurse=yes
+  register: files_to_copy1
+  when: remote_src
+- local_action: find paths="{{src_file}}" recurse=yes
+  register: files_to_copy2
+  when: not remote_src
+- set_fact:
+    files_to_copy: "{{ files_to_copy1 if remote_src else files_to_copy2 }}"
+    src_file2: "{{src_file}}"
+    dest_file2: "{{dest_file}}"
+    backup_dir_partial2: "{{backup_dir_partial}}"
+
+
+#- debug: msg="calling copy_file.yml src_file={{src_file2}}{{item.path[src_file2|length:]}} dest_file={{dest_file2}}{{item.path[src_file2|length:]}} backup_dir_partial={{backup_dir_partial2}}{{item.path[src_file2|length:]}}"
+#  with_items: "{{files_to_copy.files}}"
+    
+- include: copy_file.yml src_file={{src_file2}}{{item.path[src_file2|length:]}} dest_file={{dest_file2}}{{item.path[src_file2|length:]}} backup_dir_partial={{backup_dir_partial2}}{{item.path[src_file2|length:]}}
+  with_items: "{{files_to_copy.files}}"
+  
