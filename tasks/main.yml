@@ -45,7 +45,7 @@
   register: files_uploaded
 - file: path=temp_file.stdout state=absent
 - name: "Files uploaded:"
-  debug: var=files_uploaded.stdout.split('\n')
+  debug: var=files_uploaded.stdout_lines
 - name: "Backups are at:"
   debug: var=backup_dir_name
   when: backup_dir is defined
