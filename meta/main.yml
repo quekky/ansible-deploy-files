@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: quekky
-  description: Generic role to deploy files to a server. It can be optionally backup the existing files to a dir on the server.
+  description: Rollback to previous backup
   company: 
 
   #issue_tracker_url: https://
@@ -16,4 +16,4 @@ galaxy_info:
   galaxy_tags:
   - system
 
-dependencies: []
+dependencies: [quekky.deploy_files]

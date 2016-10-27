@@ -2,7 +2,7 @@
 # Deploy dir or a file to the server, if the file is changed
 # Optionally backup the existing files in backup_dir
 
-#- debug: msg="{{src}} {{dest}} {{remote_src}} {{backup_dir}}"
+- debug: msg="{{src}} {{dest}} {{remote_src}} {{backup_dir}}"
 
 - name: Check variables passed in
   assert:
@@ -44,9 +44,11 @@
   command: cat {{temp_file.stdout}}
   register: files_uploaded
 - file: path=temp_file.stdout state=absent
+- file: path=backup_dir_full state=absent
+  when: backup_dir is defined and files_uploaded.stdout_lines|length == 0 
 - name: "Files uploaded:"
   debug: var=files_uploaded.stdout_lines
 - name: "Backups are at:"
   debug: var=backup_dir_name
-  when: backup_dir is defined
+  when: backup_dir is defined and files_uploaded.stdout_lines|length > 0
 
