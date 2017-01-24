@@ -7,4 +7,4 @@
     dest_file2: "{{dest_file|regex_replace('/$','')}}/{{src_file.split('/')[-1]}}"
   when: dest_file|regex_replace('/$','') == dest_file|dirname
 
-- include: copy_file.yml dest_file={{dest_file2}}
+- include: copy_file.yml dest_file={{dest_file2}} backup_dir_partial={{src_file.split('/')[-1]}}

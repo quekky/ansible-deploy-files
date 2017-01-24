@@ -21,7 +21,7 @@
   - name: Backup if required
     assert: that=true
   - block:
-    - file: path={{backup_dir_full}}{{backup_dir_partial}} recurse=yes state=directory
+    - file: path={{backup_dir_full}}{{backup_dir_partial|dirname}} recurse=yes state=directory
     - copy: src={{dest_file}} dest={{backup_dir_full}}{{backup_dir_partial}} remote_src=true force=yes
     when: backup_dir_full is defined and dest_file_stat.stat.exists
     ignore_errors: true

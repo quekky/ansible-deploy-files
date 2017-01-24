@@ -2,7 +2,7 @@
 # Deploy dir or a file to the server, if the file is changed
 # Optionally backup the existing files in backup_dir
 
-- debug: msg="{{src}} {{dest}} {{remote_src}} {{backup_dir}}"
+#- debug: msg="{{src}} {{dest}} {{remote_src}} {{backup_dir}}"
 
 - name: Check variables passed in
   assert:
@@ -24,6 +24,8 @@
   when: not remote_src
 - set_fact:
     src_file_stat: "{{ src_file_stat1 if remote_src else src_file_stat2 }}"
+- debug:
+    msg: "test {{src_file_stat.stat.isdir}}"
 
 - name: Check if src file exist
   assert:
@@ -33,10 +35,10 @@
   shell: mktemp
   register: temp_file
 
-- include: copy_file_to_dir.yml src_file={{src}} dest_file={{dest}} backup_dir_partial=
+- include: copy_file_to_dir.yml src_file={{src}} dest_file={{dest}}
   when: not src_file_stat.stat.isdir
 
-- include: copy_dir.yml src_file={{src}} dest_file={{dest}} backup_dir_partial=
+- include: copy_dir.yml src_file={{src}} dest_file={{dest}}
   when: src_file_stat.stat.isdir
   
 #print result
